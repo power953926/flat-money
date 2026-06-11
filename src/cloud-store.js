@@ -15,7 +15,7 @@ export function isCloudConfigured() {
   return Boolean(firebaseConfig.enabled && firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.authDomain && firebaseConfig.appId);
 }
 
-export async function initCloudStore({ onAuth, onRemoteState, getLocalState }) {
+export async function initCloudStore({ onAuth, onRemoteState, onError, getLocalState }) {
   if (!isCloudConfigured()) {
     onAuth({ mode: "local", user: null, ready: false });
     return;
@@ -44,15 +44,21 @@ export async function initCloudStore({ onAuth, onRemoteState, getLocalState }) {
 
     if (!user) return;
 
-    unsubscribeSnapshot = firestoreModule.onSnapshot(docRef, async (snapshot) => {
-      if (snapshot.exists()) {
-        const remoteState = snapshot.data().state;
-        if (remoteState) onRemoteState(remoteState);
-        return;
-      }
+    unsubscribeSnapshot = firestoreModule.onSnapshot(
+      docRef,
+      async (snapshot) => {
+        if (snapshot.exists()) {
+          const remoteState = snapshot.data().state;
+          if (remoteState) onRemoteState(remoteState);
+          return;
+        }
 
-      await saveCloudState(getLocalState());
-    });
+        await saveCloudState(getLocalState());
+      },
+      (error) => {
+        onError?.(error);
+      }
+    );
   });
 }
 

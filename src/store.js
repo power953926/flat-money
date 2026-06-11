@@ -1,7 +1,7 @@
 import { imported2026Members, imported2026OpeningBalance, imported2026Transactions } from "./imported-2026.js";
 
 const STORAGE_KEY = "bubu-house-fund-state-v1";
-const DATA_VERSION = "2026-csv-authoritative-20260611-r2";
+export const DATA_VERSION = "2026-csv-authoritative-20260611-r2";
 
 export const demoMembers = imported2026Members;
 

@@ -1,6 +1,6 @@
 import { formatMoney } from "./format.js";
 import { createCloudAccount, initCloudStore, isCloudConfigured, saveCloudState, signInToCloud, signOutFromCloud } from "./cloud-store.js";
-import { cryptoId, loadState, normalizeState, resetState, saveState, toDateInputValue } from "./store.js";
+import { DATA_VERSION, cryptoId, loadState, normalizeState, resetState, saveState, toDateInputValue } from "./store.js";
 
 let state = loadState();
 let editingTransactionId = null;
@@ -87,6 +87,7 @@ async function initCloud() {
       },
       onRemoteState: (remoteState) => {
         if (shouldIgnoreRemoteState(remoteState)) return;
+        if (shouldKeepLocalState(remoteState)) return;
         const remoteDataVersion = remoteState?.dataVersion || "";
         suppressCloudSave = true;
         state = normalizeState(remoteState);
@@ -101,10 +102,11 @@ async function initCloud() {
         render();
         suppressCloudSave = false;
         if (shouldSaveMigration) {
-          saveCloudState(state).catch((error) => {
-            els.cloudStatus.textContent = `雲端重建失敗：${error.message}`;
-          });
+          saveCloudState(state).catch((error) => handleCloudSaveError(error, "雲端重建失敗"));
         }
+      },
+      onError: (error) => {
+        els.cloudStatus.textContent = `雲端讀取失敗：${error.message}`;
       }
     });
   } catch (error) {
@@ -605,12 +607,40 @@ function signedAmount(transaction) {
 function persist() {
   saveState(state);
   if (!suppressCloudSave) {
-    saveCloudState(state).catch((error) => {
-      pendingBinding = null;
-      els.cloudStatus.textContent = `雲端儲存失敗：${error.message}`;
-    });
+    saveCloudState(state).catch((error) => handleCloudSaveError(error, "雲端儲存失敗"));
   }
   render();
+}
+
+function shouldKeepLocalState(remoteState) {
+  const remoteDataVersion = remoteState?.dataVersion || "";
+  const localIsCurrent = state.dataVersion === DATA_VERSION;
+  const remoteIsStale = remoteDataVersion !== DATA_VERSION;
+  if (!localIsCurrent || !remoteIsStale) return false;
+
+  mergeRemoteMemberBindings(remoteState);
+  cloudDataReady = true;
+  applyCurrentUserMember();
+  saveState(state);
+  render();
+  saveCloudState(state).catch((error) => handleCloudSaveError(error, "雲端同步失敗"));
+  return true;
+}
+
+function mergeRemoteMemberBindings(remoteState) {
+  const remoteMembersById = new Map((remoteState?.members || []).map((member) => [member.id, member]));
+  state.members = state.members.map((member) => {
+    const remoteMember = remoteMembersById.get(member.id);
+    if (!remoteMember?.email) return member;
+    return { ...member, email: remoteMember.email };
+  });
+}
+
+function handleCloudSaveError(error, prefix) {
+  pendingBinding = null;
+  const message = `${prefix}：${error.message}`;
+  els.cloudStatus.textContent = message;
+  alert(`${message}\n\n這次修改只留在目前裝置，尚未同步到雲端。請確認 Firebase 規則已發布。`);
 }
 
 function shouldIgnoreRemoteState(remoteState) {
