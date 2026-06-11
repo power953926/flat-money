@@ -110,6 +110,34 @@ button:disabled {
   padding: 24px;
 }
 
+.locked-view {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  min-height: calc(100vh - 48px);
+  padding: 48px;
+}
+
+.locked-view h2,
+.locked-view p {
+  margin: 0;
+}
+
+.locked-view h2 {
+  font-size: 32px;
+  margin: 8px 0;
+}
+
+.is-locked .workspace > :not(.locked-view) {
+  display: none;
+}
+
+.is-locked .sidebar .panel:not(.auth-panel) {
+  display: none;
+}
+
 .topbar,
 .section-heading,
 .actions {

@@ -20,6 +20,7 @@ Codex 桌面環境可用 bundled Node：
 - 修改紀錄 audit log。
 - 匯出目前資料為 JSON。
 - 可設定 Firebase Authentication + Firestore 做雲端同步。
+- 雲端模式下，必須登入才能觀看帳本；登入 email 綁定成員後才能編輯。
 
 未設定 Firebase 時，資料會存在瀏覽器 `localStorage`。設定 Firebase 後，登入即可同步到雲端。
 

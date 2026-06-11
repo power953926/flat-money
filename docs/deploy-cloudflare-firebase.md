@@ -30,12 +30,14 @@ export const firebaseConfig = {
 ## 3. 使用流程
 
 1. 開啟 Cloudflare Pages 網址。
-2. 第一位使用者用左側「建立帳號」建立帳號。
-3. 登入後，App 會把目前本機資料寫入 Firestore。
-4. 其他室友建立帳號或登入後，會讀取同一份 `houseFunds/default` 帳本資料。
+2. 使用者用左側「建立帳號」建立帳號。
+3. 未登入者不能觀看帳本內容。
+4. 第一位登入者可在成員的 `...` 選單中使用「綁定目前帳號」，把 email 綁到自己的成員。
+5. 只有 email 已綁定成員的帳號可以新增、修改、刪除資料。
+6. 其他室友建立帳號後，由已綁定成員的使用者協助把室友 email 綁定到對應成員。
 
 ## 4. 注意
 
 - `firebaseConfig` 不是密碼，但 Firestore Rules 一定要設定，避免未登入者讀寫。
-- 第一版所有登入使用者都能讀寫同一份帳本。
-- 後續如果要限制只有指定室友帳號可用，可以把 email allowlist 加進 Firestore Rules。
+- Firestore Rules 目前要求登入後才能讀寫。
+- 前端會再限制只有 email 已綁定成員的帳號可以編輯。

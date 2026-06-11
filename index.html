@@ -45,6 +45,13 @@
       </aside>
 
       <section class="workspace">
+        <section id="locked-view" class="locked-view" hidden>
+          <div>
+            <p class="eyebrow">PRIVATE LEDGER</p>
+            <h2>請先登入</h2>
+            <p>登入後才能查看與編輯租屋收支資料。</p>
+          </div>
+        </section>
         <header class="topbar">
           <div>
             <p class="eyebrow">MONTHLY OVERVIEW</p>
@@ -163,6 +170,8 @@
     </main>
     <div id="member-menu" class="context-menu" hidden>
       <button data-action="rename" type="button">重新命名</button>
+      <button data-action="bind-email" type="button">綁定目前帳號</button>
+      <button data-action="clear-email" type="button">解除綁定</button>
       <button data-action="delete" type="button">刪除 / 停用</button>
     </div>
     <div id="transaction-menu" class="context-menu" hidden>

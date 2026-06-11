@@ -64,6 +64,7 @@ export function normalizeState(state) {
     ...state,
     members: (state.members || demoMembers).map((member) => ({
       ...member,
+      email: member.email || "",
       active: member.active ?? true
     })),
     transactions: (state.transactions || []).map((transaction) => ({

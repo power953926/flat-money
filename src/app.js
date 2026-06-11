@@ -4,7 +4,7 @@ import { cryptoId, loadState, normalizeState, resetState, saveState, toDateInput
 
 let state = loadState();
 let editingTransactionId = null;
-let cloudEnabled = false;
+let cloudEnabled = isCloudConfigured();
 let cloudUser = null;
 let suppressCloudSave = false;
 
@@ -27,7 +27,8 @@ const els = {
   exportJson: document.querySelector("#export-json"),
   cloudStatus: document.querySelector("#cloud-status"),
   authForm: document.querySelector("#auth-form"),
-  signOut: document.querySelector("#sign-out")
+  signOut: document.querySelector("#sign-out"),
+  lockedView: document.querySelector("#locked-view")
 };
 
 init();
@@ -76,11 +77,13 @@ async function initCloud() {
       getLocalState: () => state,
       onAuth: ({ user }) => {
         cloudUser = user;
+        applyCurrentUserMember();
         renderCloudStatus();
       },
       onRemoteState: (remoteState) => {
         suppressCloudSave = true;
         state = normalizeState(remoteState);
+        applyCurrentUserMember();
         saveState(state);
         cancelTransactionEdit(false);
         render();
@@ -93,11 +96,13 @@ async function initCloud() {
 }
 
 function render() {
+  applyCurrentUserMember();
   renderMemberOptions();
   renderSummary();
   renderTransactions();
   renderAuditLog();
   renderCloudStatus();
+  renderAccessState();
   saveState(state);
 }
 
@@ -113,7 +118,12 @@ function renderCloudStatus() {
   }
 
   if (cloudUser) {
-    els.cloudStatus.textContent = `已同步：${cloudUser.email || "已登入"}`;
+    const member = currentBoundMember();
+    els.cloudStatus.textContent = member
+      ? `已同步：${cloudUser.email}（${member.name}）`
+      : canBootstrapBinding()
+        ? `已登入：${cloudUser.email}，請先將帳號綁定成員`
+        : `已登入：${cloudUser.email}，尚未綁定成員`;
     els.authForm.hidden = true;
     setAuthFormDisabled(false);
     els.signOut.hidden = false;
@@ -132,6 +142,49 @@ function setAuthFormDisabled(disabled) {
   });
 }
 
+function renderAccessState() {
+  const locked = cloudEnabled && !cloudUser;
+  els.lockedView.hidden = !locked;
+  document.body.classList.toggle("is-locked", locked);
+  setEditingDisabled(!canEdit());
+}
+
+function setEditingDisabled(disabled) {
+  els.memberForm.querySelectorAll("input, button").forEach((element) => {
+    element.disabled = disabled;
+  });
+  els.transactionForm.querySelectorAll("input, select, button").forEach((element) => {
+    element.disabled = disabled;
+  });
+  els.seedDemo.disabled = disabled;
+}
+
+function canEdit() {
+  if (!cloudEnabled) return true;
+  return Boolean(cloudUser && currentBoundMember());
+}
+
+function canManageMemberBinding() {
+  if (!cloudEnabled) return true;
+  return Boolean(cloudUser && (currentBoundMember() || canBootstrapBinding()));
+}
+
+function canBootstrapBinding() {
+  if (!cloudUser) return false;
+  return !state.members.some((member) => member.email);
+}
+
+function currentBoundMember() {
+  if (!cloudUser?.email) return null;
+  const email = cloudUser.email.toLowerCase();
+  return state.members.find((member) => member.active && member.email?.toLowerCase() === email) || null;
+}
+
+function applyCurrentUserMember() {
+  const member = currentBoundMember();
+  if (member) state.activeMemberId = member.id;
+}
+
 function renderMemberOptions() {
   const activeMembers = state.members.filter((member) => member.active);
   if (!activeMembers.some((member) => member.id === state.activeMemberId)) {
@@ -146,6 +199,7 @@ function renderMemberOptions() {
   els.transactionForm.querySelector(".primary").disabled = activeMembers.length === 0;
   els.monthPicker.value = state.selectedPeriod;
   renderMemberList();
+  setEditingDisabled(!canEdit());
 
   els.transactionForm.elements.date.value ||= toDateInputValue();
 }
@@ -167,7 +221,7 @@ function renderMemberList() {
   els.memberList.querySelectorAll("[data-member-id]").forEach((button) => {
     button.addEventListener("click", () => {
       const member = state.members.find((item) => item.id === button.dataset.memberId);
-      if (!member?.active) return;
+      if (!member?.active || !canEdit()) return;
       state.activeMemberId = member.id;
       persist("切換目前使用者");
     });
@@ -233,6 +287,7 @@ function renderAuditLog() {
 
 function handleTransactionSubmit(event) {
   event.preventDefault();
+  if (!canEdit()) return;
   const data = new FormData(els.transactionForm);
   const type = data.get("type");
   const amount = Number(data.get("amount"));
@@ -271,6 +326,7 @@ function handleTransactionSubmit(event) {
 
 function handleMemberSubmit(event) {
   event.preventDefault();
+  if (!canEdit()) return;
   const name = new FormData(els.memberForm).get("memberName").trim();
   if (!name) return;
 
@@ -287,6 +343,7 @@ function handleMemberSubmit(event) {
 }
 
 function renameMember(memberId) {
+  if (!canEdit()) return;
   const member = state.members.find((item) => item.id === memberId);
   const nextName = prompt("新的成員名稱", member?.name || "")?.trim();
   if (!member || !nextName || member.name === nextName) return;
@@ -298,6 +355,7 @@ function renameMember(memberId) {
 }
 
 function deleteMember(memberId) {
+  if (!canEdit()) return;
   const member = state.members.find((item) => item.id === memberId);
   if (!member) return;
 
@@ -333,13 +391,39 @@ function handleMemberMenuAction(event) {
   const action = event.target.dataset.action;
   const memberId = els.memberMenu.dataset.memberId;
   if (!action || !memberId) return;
+  if (!canEdit() && !["bind-email", "clear-email"].includes(action)) return;
+  if (["bind-email", "clear-email"].includes(action) && !canManageMemberBinding()) return;
 
   if (action === "rename") renameMember(memberId);
+  if (action === "bind-email") bindMemberEmail(memberId);
+  if (action === "clear-email") clearMemberEmail(memberId);
   if (action === "delete" && confirm("確定要刪除或停用這位成員嗎？")) deleteMember(memberId);
   closeMemberMenu();
 }
 
+function bindMemberEmail(memberId) {
+  if (!cloudUser?.email) return;
+  state.members.forEach((member) => {
+    if (member.email?.toLowerCase() === cloudUser.email.toLowerCase()) member.email = "";
+  });
+  const member = state.members.find((item) => item.id === memberId);
+  if (!member) return;
+  member.email = cloudUser.email;
+  state.activeMemberId = member.id;
+  addAudit(`綁定帳號：${member.name} ${cloudUser.email}`);
+  persist("綁定帳號");
+}
+
+function clearMemberEmail(memberId) {
+  const member = state.members.find((item) => item.id === memberId);
+  if (!member?.email) return;
+  addAudit(`解除帳號綁定：${member.name} ${member.email}`);
+  member.email = "";
+  persist("解除帳號綁定");
+}
+
 function deleteTransaction(id) {
+  if (!canEdit()) return;
   const item = state.transactions.find((record) => record.id === id);
   state.transactions = state.transactions.filter((record) => record.id !== id);
   if (editingTransactionId === id) resetTransactionForm();
@@ -348,6 +432,7 @@ function deleteTransaction(id) {
 }
 
 function editTransaction(id) {
+  if (!canEdit()) return;
   const transaction = state.transactions.find((item) => item.id === id);
   if (!transaction) return;
 
@@ -397,6 +482,7 @@ function handleTransactionMenuAction(event) {
   const action = event.target.dataset.action;
   const transactionId = els.transactionMenu.dataset.transactionId;
   if (!action || !transactionId) return;
+  if (!canEdit()) return;
 
   if (action === "edit") editTransaction(transactionId);
   if (action === "delete" && confirm("確定要刪除這筆收支紀錄嗎？")) deleteTransaction(transactionId);
