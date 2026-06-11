@@ -83,12 +83,24 @@ export async function saveCloudState(state) {
   await firestoreModule.setDoc(
     docRef,
     {
-      state,
-      editors: buildEditors(state),
+      state: sanitizeForFirestore(state),
+      editors: sanitizeForFirestore(buildEditors(state)),
       updatedAt: firestoreModule.serverTimestamp(),
       updatedBy: currentUser.email || currentUser.uid
     },
     { merge: true }
+  );
+}
+
+function sanitizeForFirestore(value) {
+  if (value === undefined) return null;
+  if (value === null || typeof value !== "object") return value;
+  if (Array.isArray(value)) return value.map(sanitizeForFirestore);
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([, item]) => item !== undefined)
+      .map(([key, item]) => [key, sanitizeForFirestore(item)])
   );
 }
 

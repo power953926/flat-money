@@ -326,9 +326,12 @@ function handleTransactionSubmit(event) {
   const data = new FormData(els.transactionForm);
   const type = data.get("type");
   const amount = Number(data.get("amount"));
+  const existingTransaction = editingTransactionId
+    ? state.transactions.find((item) => item.id === editingTransactionId)
+    : null;
   const transaction = {
     id: editingTransactionId || cryptoId(),
-    createdAt: editingTransactionId ? state.transactions.find((item) => item.id === editingTransactionId)?.createdAt : new Date().toISOString(),
+    createdAt: existingTransaction?.createdAt || new Date().toISOString(),
     type,
     date: data.get("date"),
     title: data.get("title").trim(),
