@@ -6,6 +6,7 @@ let state = loadState();
 let editingTransactionId = null;
 let cloudEnabled = isCloudConfigured();
 let cloudUser = null;
+let cloudDataReady = !cloudEnabled;
 let suppressCloudSave = false;
 let pendingBinding = null;
 
@@ -80,8 +81,9 @@ async function initCloud() {
       getLocalState: () => state,
       onAuth: ({ user }) => {
         cloudUser = user;
+        cloudDataReady = false;
         applyCurrentUserMember();
-        renderCloudStatus();
+        render();
       },
       onRemoteState: (remoteState) => {
         if (shouldIgnoreRemoteState(remoteState)) return;
@@ -92,6 +94,7 @@ async function initCloud() {
         if (pendingBinding && hasMemberEmail(state, pendingBinding.memberId, pendingBinding.email)) {
           pendingBinding = null;
         }
+        cloudDataReady = true;
         applyCurrentUserMember();
         saveState(state);
         cancelTransactionEdit(false);
@@ -133,6 +136,15 @@ function renderCloudStatus() {
   }
 
   if (cloudUser) {
+    if (!cloudDataReady) {
+      els.cloudStatus.textContent = `已登入：${cloudUser.email}，正在載入雲端資料`;
+      els.authForm.hidden = true;
+      els.cloudHint.hidden = true;
+      setAuthFormDisabled(false);
+      els.signOut.hidden = false;
+      return;
+    }
+
     const member = currentBoundMember();
     els.cloudStatus.textContent = member
       ? `已同步：${cloudUser.email}（${member.name}）`
@@ -178,12 +190,12 @@ function setEditingDisabled(disabled) {
 
 function canEdit() {
   if (!cloudEnabled) return true;
-  return Boolean(cloudUser && currentBoundMember());
+  return Boolean(cloudUser && cloudDataReady && currentBoundMember());
 }
 
 function canManageMemberBinding(memberId = null) {
   if (!cloudEnabled) return true;
-  if (!cloudUser) return false;
+  if (!cloudUser || !cloudDataReady) return false;
   if (currentBoundMember() || canBootstrapBinding()) return true;
   if (!memberId) return false;
   const member = state.members.find((item) => item.id === memberId);
