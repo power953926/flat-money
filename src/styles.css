@@ -86,16 +86,13 @@ button:disabled {
   margin-bottom: 24px;
 }
 
-.brand-mark {
-  display: grid;
-  width: 48px;
-  height: 48px;
-  place-items: center;
-  border-radius: 8px;
-  background: #f8c85b;
-  color: #18231f;
-  font-size: 24px;
-  font-weight: 900;
+.brand-avatar {
+  width: 52px;
+  height: 52px;
+  border: 2px solid rgba(248, 250, 252, 0.24);
+  border-radius: 50%;
+  flex: 0 0 52px;
+  object-fit: cover;
 }
 
 .brand h1,
