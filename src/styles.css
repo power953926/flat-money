@@ -598,6 +598,46 @@ tbody tr:hover {
 }
 
 @media (max-width: 640px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  button,
+  input,
+  select {
+    font-size: 16px;
+  }
+
+  .brand {
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .brand-avatar {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+  }
+
+  .brand h1 {
+    font-size: 20px;
+  }
+
+  .brand p,
+  .hint,
+  .cloud-status {
+    font-size: 12px;
+  }
+
+  .sidebar,
+  .workspace {
+    padding: 14px;
+  }
+
+  .panel {
+    padding: 14px;
+  }
+
   .topbar,
   .section-heading,
   .actions,
@@ -608,5 +648,162 @@ tbody tr:hover {
 
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    margin-bottom: 12px;
+  }
+
+  .balance-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .balance-heading input {
+    width: 100%;
+  }
+
+  .balance-strip {
+    margin-bottom: 14px;
+  }
+
+  .balance-strip article {
+    padding: 16px;
+  }
+
+  .balance-strip strong {
+    font-size: 30px;
+  }
+
+  .desktop-layout,
+  .right-rail {
+    gap: 14px;
+  }
+
+  .table-wrap {
+    overflow: visible;
+  }
+
+  table,
+  tbody,
+  tr,
+  td {
+    display: block;
+    width: 100%;
+  }
+
+  table {
+    min-width: 0;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  tbody tr {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "date amount"
+      "title action"
+      "meta balance";
+    gap: 8px 12px;
+    padding: 12px;
+  }
+
+  tbody tr:hover {
+    background: #fff;
+  }
+
+  td {
+    border: 0;
+    padding: 0;
+  }
+
+  td[data-label="日期"] {
+    color: var(--muted);
+    font-size: 13px;
+    grid-area: date;
+  }
+
+  td[data-label="類型"] {
+    display: none;
+  }
+
+  td[data-label="項目"] {
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 800;
+    grid-area: title;
+    min-width: 0;
+  }
+
+  td[data-label="項目"]::before {
+    content: "";
+  }
+
+  td[data-label="付款人"] {
+    color: var(--muted);
+    font-size: 13px;
+    grid-area: meta;
+  }
+
+  td[data-label="付款人"]::after {
+    content: "・" attr(data-category);
+  }
+
+  td[data-label="分類"] {
+    display: none;
+  }
+
+  td[data-label="金額"] {
+    font-size: 16px;
+    grid-area: amount;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  td[data-label="當筆餘額"] {
+    color: var(--muted);
+    font-size: 13px;
+    grid-area: balance;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  td[data-label="當筆餘額"]::before {
+    content: "餘額 ";
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .action-col {
+    grid-area: action;
+    justify-self: end;
+    width: auto;
+  }
+
+  .row-menu-button {
+    min-height: 34px;
+    min-width: 40px;
+  }
+
+  .form-actions,
+  .auth-actions,
+  .member-form {
+    grid-template-columns: 1fr;
+  }
+
+  .member-list {
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 }

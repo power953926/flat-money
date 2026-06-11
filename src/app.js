@@ -265,14 +265,14 @@ function renderTransactions() {
     ? records
         .map((item) => `
           <tr data-transaction-id="${item.id}">
-            <td>${item.date}</td>
-            <td><span class="type-badge ${item.type}">${item.type === "income" ? "收入" : "支出"}</span></td>
-            <td>${escapeHtml(item.title)}</td>
-            <td>${escapeHtml(memberNames(item, membersById))}</td>
-            <td>${escapeHtml(item.category)}</td>
-            <td class="numeric amount ${item.type}">${formatMoney(item.amount)}</td>
-            <td class="numeric running-balance ${balanceById.get(item.id) < 0 ? "negative" : ""}">${formatMoney(balanceById.get(item.id))}</td>
-            <td class="action-col">
+            <td data-label="日期">${item.date}</td>
+            <td data-label="類型"><span class="type-badge ${item.type}">${item.type === "income" ? "收入" : "支出"}</span></td>
+            <td data-label="項目">${escapeHtml(item.title)}</td>
+            <td data-label="付款人" data-category="${escapeHtml(item.category)}">${escapeHtml(memberNames(item, membersById))}</td>
+            <td data-label="分類">${escapeHtml(item.category)}</td>
+            <td data-label="金額" class="numeric amount ${item.type}">${formatMoney(item.amount)}</td>
+            <td data-label="當筆餘額" class="numeric running-balance ${balanceById.get(item.id) < 0 ? "negative" : ""}">${formatMoney(balanceById.get(item.id))}</td>
+            <td data-label="操作" class="action-col">
               <button class="row-menu-button" data-transaction-menu="${item.id}" type="button" aria-label="開啟操作選單">...</button>
             </td>
           </tr>
