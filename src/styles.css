@@ -1,5 +1,9 @@
 :root {
   color-scheme: light;
+  --app-max-width: 1360px;
+  --sidebar-width: 240px;
+  --right-rail-width: 320px;
+  --page-gutter: 24px;
   --bg: #f7f8f5;
   --surface: #ffffff;
   --surface-2: #eef6f3;
@@ -62,14 +66,17 @@ button:disabled {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 260px minmax(980px, 1fr);
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  margin: 0 auto;
+  max-width: var(--app-max-width);
   min-height: 100vh;
+  width: 100%;
 }
 
 .sidebar {
   background: #10231f;
   color: #f8fafc;
-  padding: 24px;
+  padding: var(--page-gutter);
 }
 
 .brand {
@@ -111,7 +118,7 @@ button:disabled {
 
 .workspace {
   min-width: 0;
-  padding: 24px;
+  padding: var(--page-gutter);
 }
 
 .locked-view {
@@ -363,7 +370,7 @@ select {
 
 .desktop-layout {
   display: grid;
-  grid-template-columns: minmax(680px, 1fr) 360px;
+  grid-template-columns: minmax(660px, 1fr) var(--right-rail-width);
   gap: 18px;
   align-items: start;
 }
@@ -392,7 +399,7 @@ select {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 760px;
+  min-width: 720px;
 }
 
 th,
@@ -517,6 +524,49 @@ tbody tr:hover {
 
 .danger {
   color: var(--rose);
+}
+
+@media (max-width: 1280px) {
+  :root {
+    --page-gutter: 14px;
+    --right-rail-width: 300px;
+    --sidebar-width: 228px;
+  }
+
+  .desktop-layout {
+    gap: 14px;
+    grid-template-columns: minmax(620px, 1fr) var(--right-rail-width);
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  th,
+  td {
+    padding: 10px 7px;
+  }
+
+  .balance-strip article {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 1180px) {
+  :root {
+    --page-gutter: 12px;
+    --right-rail-width: 280px;
+    --sidebar-width: 216px;
+  }
+
+  .desktop-layout {
+    gap: 12px;
+    grid-template-columns: minmax(580px, 1fr) var(--right-rail-width);
+  }
+
+  table {
+    min-width: 680px;
+  }
 }
 
 @media (max-width: 960px) {
