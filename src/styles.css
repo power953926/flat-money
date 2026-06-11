@@ -572,6 +572,22 @@ tbody tr:hover {
     grid-template-columns: 1fr;
   }
 
+  .main-column {
+    display: contents;
+  }
+
+  .records-panel {
+    order: 1;
+  }
+
+  .right-rail {
+    order: 2;
+  }
+
+  .audit-panel {
+    order: 3;
+  }
+
   .sidebar {
     padding: 18px;
   }
