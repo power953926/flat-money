@@ -306,6 +306,7 @@ function handleTransactionSubmit(event) {
   const amount = Number(data.get("amount"));
   const transaction = {
     id: editingTransactionId || cryptoId(),
+    createdAt: editingTransactionId ? state.transactions.find((item) => item.id === editingTransactionId)?.createdAt : new Date().toISOString(),
     type,
     date: data.get("date"),
     title: data.get("title").trim(),
@@ -555,11 +556,18 @@ function chronologicalTransactions() {
 }
 
 function compareTransactionsAsc(a, b) {
-  return a.date.localeCompare(b.date) || a.id.localeCompare(b.id);
+  return a.date.localeCompare(b.date) || transactionOrderValue(a) - transactionOrderValue(b);
 }
 
 function compareTransactionsDesc(a, b) {
-  return b.date.localeCompare(a.date) || b.id.localeCompare(a.id);
+  return b.date.localeCompare(a.date) || transactionOrderValue(b) - transactionOrderValue(a);
+}
+
+function transactionOrderValue(transaction) {
+  const createdAt = Date.parse(transaction.createdAt || "");
+  const index = state.transactions.findIndex((item) => item.id === transaction.id);
+  if (Number.isFinite(createdAt)) return (createdAt * 100000) + index;
+  return index;
 }
 
 function signedAmount(transaction) {
