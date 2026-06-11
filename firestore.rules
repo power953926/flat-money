@@ -7,6 +7,7 @@ service cloud.firestore {
       allow update, delete: if request.auth != null
         && (
           !('editors' in resource.data)
+          || resource.data.editors.keys().size() == 0
           || request.auth.token.email in resource.data.editors.keys()
         );
     }

@@ -7,6 +7,7 @@ let editingTransactionId = null;
 let cloudEnabled = isCloudConfigured();
 let cloudUser = null;
 let suppressCloudSave = false;
+let pendingBinding = null;
 
 const els = {
   memberList: document.querySelector("#member-list"),
@@ -81,8 +82,12 @@ async function initCloud() {
         renderCloudStatus();
       },
       onRemoteState: (remoteState) => {
+        if (shouldIgnoreRemoteState(remoteState)) return;
         suppressCloudSave = true;
         state = normalizeState(remoteState);
+        if (pendingBinding && hasMemberEmail(state, pendingBinding.memberId, pendingBinding.email)) {
+          pendingBinding = null;
+        }
         applyCurrentUserMember();
         saveState(state);
         cancelTransactionEdit(false);
@@ -409,6 +414,7 @@ function bindMemberEmail(memberId) {
   const member = state.members.find((item) => item.id === memberId);
   if (!member) return;
   member.email = cloudUser.email;
+  pendingBinding = { memberId, email: cloudUser.email };
   state.activeMemberId = member.id;
   addAudit(`綁定帳號：${member.name} ${cloudUser.email}`);
   persist("綁定帳號");
@@ -546,10 +552,23 @@ function persist() {
   saveState(state);
   if (!suppressCloudSave) {
     saveCloudState(state).catch((error) => {
+      pendingBinding = null;
       els.cloudStatus.textContent = `雲端儲存失敗：${error.message}`;
     });
   }
   render();
+}
+
+function shouldIgnoreRemoteState(remoteState) {
+  if (!pendingBinding) return false;
+  const normalizedRemote = normalizeState(remoteState);
+  return !hasMemberEmail(normalizedRemote, pendingBinding.memberId, pendingBinding.email);
+}
+
+function hasMemberEmail(targetState, memberId, email) {
+  return targetState.members?.some((member) => (
+    member.id === memberId && member.email?.toLowerCase() === email.toLowerCase()
+  ));
 }
 
 async function handleAuthSubmit(event) {
