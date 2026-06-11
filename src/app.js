@@ -57,10 +57,11 @@ async function init() {
     if (!els.memberMenu.contains(event.target)) closeMemberMenu();
     if (!els.transactionMenu.contains(event.target)) closeTransactionMenu();
   });
+  window.addEventListener("scroll", closeMenus, { passive: true });
+  window.addEventListener("resize", closeMenus);
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
-      closeMemberMenu();
-      closeTransactionMenu();
+      closeMenus();
     }
   });
   els.memberMenu.addEventListener("click", handleMemberMenuAction);
@@ -390,6 +391,7 @@ function deleteMember(memberId) {
 }
 
 function openMemberMenu(memberId, x, y) {
+  closeTransactionMenu();
   els.memberMenu.dataset.memberId = memberId;
   els.memberMenu.style.left = `${x}px`;
   els.memberMenu.style.top = `${y}px`;
@@ -399,6 +401,11 @@ function openMemberMenu(memberId, x, y) {
 function closeMemberMenu() {
   els.memberMenu.hidden = true;
   delete els.memberMenu.dataset.memberId;
+}
+
+function closeMenus() {
+  closeMemberMenu();
+  closeTransactionMenu();
 }
 
 function handleMemberMenuAction(event) {
@@ -493,6 +500,7 @@ function resetTransactionForm() {
 }
 
 function openTransactionMenu(transactionId, x, y) {
+  closeMemberMenu();
   els.transactionMenu.dataset.transactionId = transactionId;
   els.transactionMenu.style.left = `${x}px`;
   els.transactionMenu.style.top = `${y}px`;
