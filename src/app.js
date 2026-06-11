@@ -85,8 +85,10 @@ async function initCloud() {
       },
       onRemoteState: (remoteState) => {
         if (shouldIgnoreRemoteState(remoteState)) return;
+        const remoteDataVersion = remoteState?.dataVersion || "";
         suppressCloudSave = true;
         state = normalizeState(remoteState);
+        const shouldSaveMigration = state.dataVersion !== remoteDataVersion;
         if (pendingBinding && hasMemberEmail(state, pendingBinding.memberId, pendingBinding.email)) {
           pendingBinding = null;
         }
@@ -95,6 +97,11 @@ async function initCloud() {
         cancelTransactionEdit(false);
         render();
         suppressCloudSave = false;
+        if (shouldSaveMigration) {
+          saveCloudState(state).catch((error) => {
+            els.cloudStatus.textContent = `雲端重建失敗：${error.message}`;
+          });
+        }
       }
     });
   } catch (error) {
