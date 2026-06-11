@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>哺哺公積金</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="sidebar" aria-label="主要資訊">
+        <div class="brand">
+          <div class="brand-mark">哺</div>
+          <div>
+            <h1>哺哺公積金</h1>
+            <p>六張犁租屋收支表</p>
+          </div>
+        </div>
+
+        <section class="panel compact">
+          <h2>成員管理</h2>
+          <div id="member-list" class="member-list"></div>
+          <form id="member-form" class="member-form">
+            <input name="memberName" type="text" placeholder="新增成員名稱" required />
+            <button type="submit">新增</button>
+          </form>
+          <p class="hint">點名字切換目前使用者；點 ... 可重新命名或刪除。</p>
+        </section>
+
+        <section class="panel compact auth-panel">
+          <h2>雲端同步</h2>
+          <p id="cloud-status" class="cloud-status">本機模式</p>
+          <form id="auth-form" class="auth-form">
+            <input name="email" type="email" placeholder="Email" autocomplete="email" />
+            <input name="password" type="password" placeholder="密碼" autocomplete="current-password" />
+            <div class="auth-actions">
+              <button data-auth-action="sign-in" type="submit">登入</button>
+              <button data-auth-action="sign-up" type="submit">建立帳號</button>
+            </div>
+          </form>
+          <button id="sign-out" type="button" hidden>登出</button>
+          <p class="hint">填入 Firebase 設定後，登入即可與室友同步。</p>
+        </section>
+      </aside>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">MONTHLY OVERVIEW</p>
+            <h2 id="month-title">本月總覽</h2>
+          </div>
+        </header>
+
+        <section class="balance-strip" aria-label="月餘額">
+          <article>
+            <div class="balance-heading">
+              <span>餘額</span>
+              <label>
+                月份
+                <input id="month-picker" type="month" />
+              </label>
+            </div>
+            <strong id="balance">$0</strong>
+          </article>
+        </section>
+
+        <div class="desktop-layout">
+          <div class="main-column">
+            <section class="panel">
+              <div class="section-heading">
+                <h2>收支紀錄</h2>
+                <span id="record-count" class="pill">0 筆</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>日期</th>
+                      <th>類型</th>
+                      <th>項目</th>
+                      <th>付款人</th>
+                      <th>分類</th>
+                      <th class="numeric">金額</th>
+                      <th class="numeric">當筆餘額</th>
+                      <th class="action-col">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="transactions-body"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="section-heading">
+                <h2>修改紀錄</h2>
+                <span class="pill">Audit Log</span>
+              </div>
+              <ol id="audit-log" class="audit-log"></ol>
+            </section>
+          </div>
+
+          <aside class="right-rail">
+            <form id="transaction-form" class="panel form-panel">
+              <h2>新增收支</h2>
+              <p id="edit-hint" class="edit-hint" hidden>正在修改既有紀錄</p>
+              <div class="form-grid">
+                <label>
+                  類型
+                  <select name="type">
+                    <option value="income">收入</option>
+                    <option value="expense">支出</option>
+                  </select>
+                </label>
+                <label>
+                  日期
+                  <input name="date" type="date" required />
+                </label>
+                <label>
+                  項目
+                  <input name="title" type="text" placeholder="例：公積金、水電費" required />
+                </label>
+                <label>
+                  金額
+                  <input name="amount" type="number" inputmode="numeric" min="0" step="1" required />
+                </label>
+                <label>
+                  付款人
+                  <select name="memberId"></select>
+                </label>
+                <label>
+                  分類
+                  <select name="category">
+                    <option value="公積金">公積金</option>
+                    <option value="房租">房租</option>
+                    <option value="水電瓦斯">水電瓦斯</option>
+                    <option value="網路">網路</option>
+                    <option value="日用品">日用品</option>
+                    <option value="其他">其他</option>
+                  </select>
+                </label>
+                <label class="full">
+                  備註
+                  <input name="note" type="text" placeholder="可空白" />
+                </label>
+              </div>
+              <div class="form-actions">
+                <button class="primary" type="submit">新增紀錄</button>
+                <button id="cancel-edit" type="button" hidden>取消修改</button>
+              </div>
+            </form>
+
+            <section class="panel tools-panel">
+              <h2>工具</h2>
+              <div class="tool-actions">
+                <button id="export-json" type="button">匯出 JSON</button>
+                <button id="seed-demo" type="button">重設範例</button>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </section>
+    </main>
+    <div id="member-menu" class="context-menu" hidden>
+      <button data-action="rename" type="button">重新命名</button>
+      <button data-action="delete" type="button">刪除 / 停用</button>
+    </div>
+    <div id="transaction-menu" class="context-menu" hidden>
+      <button data-action="edit" type="button">修改</button>
+      <button data-action="delete" type="button">刪除</button>
+    </div>
+
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>
