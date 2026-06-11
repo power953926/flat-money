@@ -484,7 +484,9 @@ function deleteTransaction(id) {
   const item = state.transactions.find((record) => record.id === id);
   state.transactions = state.transactions.filter((record) => record.id !== id);
   if (editingTransactionId === id) resetTransactionForm();
-  addAudit(`刪除紀錄：${item?.title || id}`);
+  const deletedType = item?.type === "income" ? "收入" : "支出";
+  const deletedAmount = item ? ` ${formatMoney(item.amount)}` : "";
+  addAudit(`刪除${deletedType}：${item?.title || id}${deletedAmount}`);
   persist("刪除收支");
 }
 
