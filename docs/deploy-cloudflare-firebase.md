@@ -39,5 +39,5 @@ export const firebaseConfig = {
 ## 4. 注意
 
 - `firebaseConfig` 不是密碼，但 Firestore Rules 一定要設定，避免未登入者讀寫。
-- Firestore Rules 目前要求登入後才能讀寫。
-- 前端會再限制只有 email 已綁定成員的帳號可以編輯。
+- Firestore Rules 要求登入後才能讀取。
+- 第一位使用者完成成員 email 綁定後，後續只有已綁定 email 的帳號可以寫入。

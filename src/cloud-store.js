@@ -78,10 +78,19 @@ export async function saveCloudState(state) {
     docRef,
     {
       state,
+      editors: buildEditors(state),
       updatedAt: firestoreModule.serverTimestamp(),
       updatedBy: currentUser.email || currentUser.uid
     },
     { merge: true }
+  );
+}
+
+function buildEditors(state) {
+  return Object.fromEntries(
+    (state.members || [])
+      .filter((member) => member.email)
+      .map((member) => [member.email, member.id])
   );
 }
 
