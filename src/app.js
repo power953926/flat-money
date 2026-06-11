@@ -29,6 +29,7 @@ const els = {
   cloudStatus: document.querySelector("#cloud-status"),
   authForm: document.querySelector("#auth-form"),
   signOut: document.querySelector("#sign-out"),
+  cloudHint: document.querySelector("#cloud-hint"),
   lockedView: document.querySelector("#locked-view")
 };
 
@@ -117,6 +118,7 @@ function renderCloudStatus() {
   if (!cloudEnabled) {
     els.cloudStatus.textContent = "本機模式：尚未填入 Firebase 設定";
     els.authForm.hidden = false;
+    els.cloudHint.hidden = false;
     setAuthFormDisabled(true);
     els.signOut.hidden = true;
     return;
@@ -130,6 +132,7 @@ function renderCloudStatus() {
         ? `已登入：${cloudUser.email}，請先將帳號綁定成員`
         : `已登入：${cloudUser.email}，尚未綁定成員`;
     els.authForm.hidden = true;
+    els.cloudHint.hidden = true;
     setAuthFormDisabled(false);
     els.signOut.hidden = false;
     return;
@@ -137,6 +140,7 @@ function renderCloudStatus() {
 
   els.cloudStatus.textContent = "雲端模式：請登入";
   els.authForm.hidden = false;
+  els.cloudHint.hidden = false;
   setAuthFormDisabled(false);
   els.signOut.hidden = true;
 }
