@@ -485,7 +485,7 @@ function deleteTransaction(id) {
   state.transactions = state.transactions.filter((record) => record.id !== id);
   if (editingTransactionId === id) resetTransactionForm();
   const deletedType = item?.type === "income" ? "收入" : "支出";
-  const deletedAmount = item ? ` ${formatMoney(item.amount)}` : "";
+  const deletedAmount = item ? ` ${formatSignedMoney(signedAmount(item))}` : "";
   addAudit(`刪除${deletedType}：${item?.title || id}${deletedAmount}`);
   persist("刪除收支");
 }
@@ -607,6 +607,13 @@ function transactionOrderValue(transaction) {
 function signedAmount(transaction) {
   if (Number.isFinite(transaction.signedAmount)) return Number(transaction.signedAmount);
   return transaction.type === "income" ? Number(transaction.amount || 0) : -Number(transaction.amount || 0);
+}
+
+function formatSignedMoney(value) {
+  const amount = Number(value || 0);
+  if (amount > 0) return `+${formatMoney(amount)}`;
+  if (amount < 0) return `-${formatMoney(Math.abs(amount))}`;
+  return formatMoney(amount);
 }
 
 function persist() {
