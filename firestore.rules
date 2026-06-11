@@ -9,6 +9,7 @@ service cloud.firestore {
           !('editors' in resource.data)
           || resource.data.editors.keys().size() == 0
           || request.auth.token.email in resource.data.editors.keys()
+          || request.auth.token.email in request.resource.data.editors.keys()
         );
     }
   }

@@ -173,9 +173,13 @@ function canEdit() {
   return Boolean(cloudUser && currentBoundMember());
 }
 
-function canManageMemberBinding() {
+function canManageMemberBinding(memberId = null) {
   if (!cloudEnabled) return true;
-  return Boolean(cloudUser && (currentBoundMember() || canBootstrapBinding()));
+  if (!cloudUser) return false;
+  if (currentBoundMember() || canBootstrapBinding()) return true;
+  if (!memberId) return false;
+  const member = state.members.find((item) => item.id === memberId);
+  return Boolean(member?.active && !member.email);
 }
 
 function canBootstrapBinding() {
@@ -401,7 +405,11 @@ function handleMemberMenuAction(event) {
   const memberId = els.memberMenu.dataset.memberId;
   if (!action || !memberId) return;
   if (!canEdit() && !["bind-email", "clear-email"].includes(action)) return;
-  if (["bind-email", "clear-email"].includes(action) && !canManageMemberBinding()) return;
+  if (action === "bind-email" && !canManageMemberBinding(memberId)) {
+    alert("這位成員已綁定帳號，請確認是否點到正確名字。");
+    return;
+  }
+  if (action === "clear-email" && !canManageMemberBinding()) return;
 
   if (action === "rename") renameMember(memberId);
   if (action === "bind-email") bindMemberEmail(memberId);
@@ -412,11 +420,18 @@ function handleMemberMenuAction(event) {
 
 function bindMemberEmail(memberId) {
   if (!cloudUser?.email) return;
-  state.members.forEach((member) => {
-    if (member.email?.toLowerCase() === cloudUser.email.toLowerCase()) member.email = "";
-  });
   const member = state.members.find((item) => item.id === memberId);
   if (!member) return;
+  if (member.email && member.email.toLowerCase() !== cloudUser.email.toLowerCase()) {
+    alert("這位成員已經綁定其他帳號，請確認是否點到正確名字。");
+    return;
+  }
+  const confirmed = confirm(`確定要將目前登入帳號 ${cloudUser.email} 綁定到「${member.name}」嗎？`);
+  if (!confirmed) return;
+
+  state.members.forEach((item) => {
+    if (item.email?.toLowerCase() === cloudUser.email.toLowerCase()) item.email = "";
+  });
   member.email = cloudUser.email;
   pendingBinding = { memberId, email: cloudUser.email };
   state.activeMemberId = member.id;
