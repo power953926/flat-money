@@ -289,7 +289,10 @@ function renderTransactions() {
           <tr data-transaction-id="${item.id}">
             <td data-label="日期">${item.date}</td>
             <td data-label="類型"><span class="type-badge ${item.type}">${item.type === "income" ? "收入" : "支出"}</span></td>
-            <td data-label="項目">${escapeHtml(item.title)}</td>
+            <td data-label="項目">
+              <span class="transaction-title">${escapeHtml(item.title)}</span>
+              ${item.note ? `<small class="transaction-note">備註：${escapeHtml(item.note)}</small>` : ""}
+            </td>
             <td data-label="付款人" data-category="${escapeHtml(item.category)}">${escapeHtml(memberNames(item, membersById))}</td>
             <td data-label="分類">${escapeHtml(item.category)}</td>
             <td data-label="金額" class="numeric amount ${item.type}">${formatMoney(item.amount)}</td>
@@ -368,6 +371,10 @@ function handleMemberSubmit(event) {
   if (!canEdit()) return;
   const name = new FormData(els.memberForm).get("memberName").trim();
   if (!name) return;
+  if (memberNameExists(name)) {
+    alert("成員名稱已存在，請使用不同名稱。");
+    return;
+  }
 
   const member = {
     id: cryptoId(),
@@ -382,10 +389,17 @@ function handleMemberSubmit(event) {
 }
 
 function renameMember(memberId) {
-  if (!canEdit()) return;
+  if (!canManageOwnMember(memberId)) {
+    alert("只能重新命名自己綁定的成員。");
+    return;
+  }
   const member = state.members.find((item) => item.id === memberId);
   const nextName = prompt("新的成員名稱", member?.name || "")?.trim();
   if (!member || !nextName || member.name === nextName) return;
+  if (memberNameExists(nextName, memberId)) {
+    alert("成員名稱已存在，請使用不同名稱。");
+    return;
+  }
 
   const previousName = member.name;
   member.name = nextName;
@@ -394,7 +408,10 @@ function renameMember(memberId) {
 }
 
 function deleteMember(memberId) {
-  if (!canEdit()) return;
+  if (!canManageOwnMember(memberId)) {
+    alert("只能刪除或停用自己綁定的成員。");
+    return;
+  }
   const member = state.members.find((item) => item.id === memberId);
   if (!member) return;
 
@@ -415,6 +432,10 @@ function deleteMember(memberId) {
 }
 
 function openMemberMenu(memberId, x, y) {
+  if (!els.memberMenu.hidden && els.memberMenu.dataset.memberId === memberId) {
+    closeMemberMenu();
+    return;
+  }
   closeTransactionMenu();
   els.memberMenu.dataset.memberId = memberId;
   els.memberMenu.style.left = `${x}px`;
@@ -439,6 +460,11 @@ function handleMemberMenuAction(event) {
   if (!canEdit() && !["bind-email", "clear-email"].includes(action)) return;
   if (action === "bind-email" && !canManageMemberBinding(memberId)) {
     alert("這位成員已綁定帳號，請確認是否點到正確名字。");
+    return;
+  }
+  if (["rename", "delete"].includes(action) && !canManageOwnMember(memberId)) {
+    alert("只能管理自己綁定的成員。");
+    closeMemberMenu();
     return;
   }
   if (action === "clear-email" && !canManageMemberBinding()) return;
@@ -526,6 +552,10 @@ function resetTransactionForm() {
 }
 
 function openTransactionMenu(transactionId, x, y) {
+  if (!els.transactionMenu.hidden && els.transactionMenu.dataset.transactionId === transactionId) {
+    closeTransactionMenu();
+    return;
+  }
   closeMemberMenu();
   els.transactionMenu.dataset.transactionId = transactionId;
   els.transactionMenu.style.left = `${x}px`;
@@ -614,6 +644,22 @@ function formatSignedMoney(value) {
   if (amount > 0) return `+${formatMoney(amount)}`;
   if (amount < 0) return `-${formatMoney(Math.abs(amount))}`;
   return formatMoney(amount);
+}
+
+function canManageOwnMember(memberId) {
+  if (!cloudEnabled) return canEdit();
+  return Boolean(canEdit() && currentBoundMember()?.id === memberId);
+}
+
+function memberNameExists(name, ignoredMemberId = null) {
+  const normalizedName = normalizeMemberNameForCompare(name);
+  return state.members.some((member) => (
+    member.id !== ignoredMemberId && normalizeMemberNameForCompare(member.name) === normalizedName
+  ));
+}
+
+function normalizeMemberNameForCompare(name) {
+  return String(name || "").trim().replace(/\s+/g, " ").toLowerCase();
 }
 
 function persist() {

@@ -440,6 +440,18 @@ tbody tr:hover {
   color: var(--ink);
 }
 
+.transaction-title,
+.transaction-note {
+  display: block;
+}
+
+.transaction-note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
 .amount.income {
   color: #15803d;
   font-weight: 800;
@@ -795,6 +807,20 @@ tbody tr:hover {
   .row-menu-button {
     min-height: 34px;
     min-width: 40px;
+  }
+
+  .context-menu {
+    bottom: 14px;
+    left: 14px !important;
+    min-width: 0;
+    right: 14px;
+    top: auto !important;
+    z-index: 40;
+  }
+
+  .context-menu button {
+    min-height: 44px;
+    width: 100%;
   }
 
   .form-actions,
